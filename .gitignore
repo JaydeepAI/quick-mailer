@@ -1,5 +1,4 @@
-# Personal defaults and one-time setup secrets for Apps Script
-apps-script/Personal.gs
+# One-time setup secrets for Apps Script
 apps-script/Setup.gs
 
 # clasp project link and credentials

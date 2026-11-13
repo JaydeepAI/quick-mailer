@@ -7,7 +7,7 @@ Everything runs on free tiers: GitHub Pages hosts the page, and a Google Apps Sc
 ## How it works
 
 ```
-GitHub Pages: index.html + app.js          (public, nothing personal in it)
+GitHub Pages: index.html + app.js
    │  POST {key, action: "defaults"}  →  default subject + message + resume name
    │  POST {key, to, subject, html}   →  send
    │  (Content-Type: text/plain, so no CORS preflight)
@@ -19,7 +19,7 @@ Apps Script web app: Code.gs + Personal.gs (runs as you)
 GmailApp.sendEmail(...)  →  your subject, HTML message and resume
 ```
 
-- **Personal content stays private.** The default subject and message live in `apps-script/Personal.gs`, which is gitignored and only pushed to Apps Script. The page fetches them after you enter your access key.
+- **Default email text** lives in `apps-script/Personal.gs`. The page loads it from the backend after you enter your access key, and you can edit it before sending.
 - **Resume comes from a private repo.** Upload a PDF, DOC or DOCX to the `Latest Resume/` folder of a separate private repo; the most recently uploaded or updated file is attached.
 - **The access key protects the endpoint.** The web app URL is public, so every request must carry the key, which is stored in Script Properties on the server and in `localStorage` on your devices.
 
@@ -30,7 +30,7 @@ GmailApp.sendEmail(...)  →  your subject, HTML message and resume
 | `index.html`, `style.css`, `app.js` | The page (mobile-first, light and dark mode) |
 | `config.js` | Public config: just the Apps Script web app URL |
 | `apps-script/Code.gs` | Backend: `doPost` handler, GitHub resume lookup, Gmail send |
-| `apps-script/Personal.example.gs` | Template for your gitignored `Personal.gs` |
+| `apps-script/Personal.gs` | Default subject and message |
 | `apps-script/appsscript.json` | Apps Script manifest (web app runs as you, open to anyone with the key) |
 
 ## Run locally
@@ -44,7 +44,7 @@ While `APPS_SCRIPT_URL` in `config.js` is the placeholder, the page runs in **de
 ## Setup
 
 1. **Resume repo.** Create a private repo with a `Latest Resume/` folder and upload your resume. Set `GITHUB_REPO` in `Code.gs` to it.
-2. **Personal defaults.** Copy `apps-script/Personal.example.gs` to `apps-script/Personal.gs` and write your subject and message.
+2. **Default email text.** Edit the subject and message in `apps-script/Personal.gs`.
 3. **Apps Script project.** Enable the Apps Script API at [script.google.com/home/usersettings](https://script.google.com/home/usersettings), then:
    ```sh
    npm install -g @google/clasp

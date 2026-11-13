@@ -9,8 +9,7 @@
  *                               (so it appears in Sent), attaching the newest
  *                               resume from the private resume repo.
  *
- * Personal content (default subject and message) lives in Personal.gs, which
- * is gitignored. See Personal.example.gs.
+ * The default subject and message live in Personal.gs.
  *
  * Script Properties (Project Settings > Script Properties):
  *   ACCESS_KEY    The key the website sends with each request.
