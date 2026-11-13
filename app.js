@@ -118,6 +118,38 @@
       .finally(function () { if (timer) clearTimeout(timer); });
   }
 
+  function formatDate(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  // Ask the backend which resume in the GitHub "Latest Resume" folder it will attach.
+  function refreshResume() {
+    if (demoMode) {
+      els.attachment.textContent = "Newest file in the “Latest Resume” folder";
+      return;
+    }
+    var key = els.key.value.trim();
+    if (!key) {
+      els.attachment.textContent = "Enter your access key to see the latest resume";
+      return;
+    }
+    els.attachment.textContent = "Checking the “Latest Resume” folder…";
+    postToBackend({ action: "resume", key: key })
+      .then(function (data) {
+        if (data && data.ok && data.resume) {
+          var date = formatDate(data.resume.updated);
+          els.attachment.textContent = data.resume.name + (date ? " · updated " + date : "");
+        } else {
+          els.attachment.textContent = "Couldn't check: " + ((data && data.error) || "unknown error");
+        }
+      })
+      .catch(function (err) {
+        els.attachment.textContent = "Couldn't check: " + ((err && err.message) || "network error");
+      });
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -148,7 +180,8 @@
     postToBackend({ to: to, key: key, subject: subject, html: html })
       .then(function (data) {
         if (data && data.ok) {
-          setStatus("success", "Sent to " + to + ". It's in your Gmail Sent folder.");
+          var withFile = data.attachment ? " with " + data.attachment : "";
+          setStatus("success", "Sent to " + to + withFile + ". It's in your Gmail Sent folder.");
           els.to.value = "";
         } else {
           setStatus("error", (data && data.error) || "The server couldn't send the email.");
@@ -165,8 +198,8 @@
 
   function init() {
     resetToDefaults();
-    els.attachment.textContent = config.ATTACHMENT_NAME || "(attachment not set)";
     els.key.value = loadKey();
+    refreshResume();
 
     if (demoMode) {
       setStatus("demo", "Backend not configured yet. You can try the form; nothing will be sent.");
@@ -192,7 +225,10 @@
 
     els.reset.addEventListener("click", resetToDefaults);
 
-    els.key.addEventListener("change", function () { saveKey(els.key.value.trim()); });
+    els.key.addEventListener("change", function () {
+      saveKey(els.key.value.trim());
+      refreshResume();
+    });
 
     els.toggleKey.addEventListener("click", function () {
       var show = els.key.type === "password";

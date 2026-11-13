@@ -24,7 +24,4 @@ window.QUICK_MAILER_CONFIG = {
     'Your Name<br>',
     '<a href="https://linkedin.com/in/your-profile">linkedin.com/in/your-profile</a></p>'
   ].join(""),
-
-  // Shown next to the paperclip. The real file comes from Drive (see Code.gs).
-  ATTACHMENT_NAME: "attachment.pdf"
 };
