@@ -1,0 +1,20 @@
+# Local config with your real Apps Script URL
+config.js
+
+# Environment and secrets
+.env
+.env.*
+.clasp.json
+.clasprc.json
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# Dependencies and logs, if any are ever added
+node_modules/
+*.log

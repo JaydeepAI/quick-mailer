@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Quick Mailer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <h1>Quick Mailer</h1>
+      <p class="lede">Type an address, press Send. It goes out from your Gmail.</p>
+    </header>
+
+    <section class="card preview" aria-labelledby="preview-title">
+      <h2 id="preview-title" class="eyebrow">What will be sent</h2>
+      <dl class="preview-list">
+        <div class="preview-row">
+          <dt>Subject</dt>
+          <dd id="preview-subject">—</dd>
+        </div>
+        <div class="preview-row">
+          <dt>Attachment</dt>
+          <dd id="preview-attachment" class="file">—</dd>
+        </div>
+      </dl>
+    </section>
+
+    <form id="send-form" class="card form" novalidate>
+      <div class="field">
+        <label for="to">Recipient email</label>
+        <input id="to" name="to" type="email" inputmode="email" autocomplete="email"
+               placeholder="name@example.com" required aria-describedby="to-error">
+        <p id="to-error" class="field-error" role="alert" hidden></p>
+      </div>
+
+      <div class="field">
+        <label for="key">Access key</label>
+        <div class="key-row">
+          <input id="key" name="key" type="password" autocomplete="current-password"
+                 placeholder="Saved in this browser only" spellcheck="false">
+          <button type="button" id="toggle-key" class="ghost" aria-pressed="false">Show</button>
+        </div>
+        <p class="hint">Stored in this browser's localStorage and sent with each request.</p>
+      </div>
+
+      <button id="send" type="submit" class="primary">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="label">Send</span>
+      </button>
+
+      <div id="status" class="status" data-state="idle" role="status" aria-live="polite">
+        Ready.
+      </div>
+    </form>
+
+    <p id="mode-note" class="mode-note" hidden></p>
+  </main>
+
+  <!-- config.js is gitignored; copy config.example.js to create it. -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
