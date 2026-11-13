@@ -1,19 +1,23 @@
 /**
  * Quick Mailer backend (Google Apps Script web app).
  *
- * Receives POST {to, key} as a JSON string body and sends a fixed email
- * from your Gmail account with GmailApp, so it appears in your Sent folder.
+ * Receives POST {to, key, subject?, html?} as a JSON string body and sends
+ * the email from your Gmail account with GmailApp, so it appears in your
+ * Sent folder. The website pre-fills subject and html from config.js; if
+ * either is missing, the defaults below are used.
  *
  * Setup: see README.md. The access key lives in Script Properties under
  * ACCESS_KEY and is never stored in this file.
  */
 
 // Replace these in the Apps Script editor only. Don't commit real values.
-var SUBJECT = 'Your subject line here';
+var DEFAULT_SUBJECT = 'Your subject line here';
 var ATTACHMENT_FILE_ID = 'YOUR_DRIVE_FILE_ID';
-var TEMPLATE_FILE = 'template'; // template.html in the Apps Script project
+var TEMPLATE_FILE = 'template'; // template.html, used when no html is sent
 
 var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+var MAX_SUBJECT_LENGTH = 250;
+var MAX_HTML_LENGTH = 100000;
 
 function doPost(e) {
   try {
@@ -29,7 +33,17 @@ function doPost(e) {
       return json_({ ok: false, error: 'Invalid email address.' });
     }
 
-    sendMail_(to);
+    var subject = typeof body.subject === 'string' ? body.subject.trim() : '';
+    if (subject.length > MAX_SUBJECT_LENGTH || /[\r\n]/.test(subject)) {
+      return json_({ ok: false, error: 'Invalid subject.' });
+    }
+
+    var html = typeof body.html === 'string' ? body.html : '';
+    if (html.length > MAX_HTML_LENGTH) {
+      return json_({ ok: false, error: 'Message is too long.' });
+    }
+
+    sendMail_(to, subject || DEFAULT_SUBJECT, html.trim() ? html : null);
     return json_({ ok: true });
   } catch (err) {
     console.error(err);
@@ -58,14 +72,21 @@ function isValidKey_(key) {
   return diff === 0;
 }
 
-function sendMail_(to) {
-  var html = HtmlService.createHtmlOutputFromFile(TEMPLATE_FILE).getContent();
+function sendMail_(to, subject, html) {
+  var bodyHtml = html || HtmlService.createHtmlOutputFromFile(TEMPLATE_FILE).getContent();
   var attachment = DriveApp.getFileById(ATTACHMENT_FILE_ID).getBlob();
 
-  GmailApp.sendEmail(to, SUBJECT, htmlToText_(html), {
-    htmlBody: html,
+  GmailApp.sendEmail(to, subject, htmlToText_(bodyHtml), {
+    htmlBody: wrapHtml_(bodyHtml),
     attachments: [attachment]
   });
+}
+
+// Give a bare HTML fragment from the website the same font as the editor.
+function wrapHtml_(html) {
+  if (/<body[\s>]/i.test(html)) return html;
+  return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#1f2328;">' +
+    html + '</div>';
 }
 
 // Plain-text fallback for mail clients that don't render HTML.
@@ -94,5 +115,5 @@ function json_(obj) {
  * setup. It sends a test email to your own address.
  */
 function testSendToSelf() {
-  sendMail_(Session.getActiveUser().getEmail());
+  sendMail_(Session.getActiveUser().getEmail(), DEFAULT_SUBJECT, null);
 }

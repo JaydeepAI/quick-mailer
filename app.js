@@ -11,18 +11,25 @@
   var backendUrl = String(config.APPS_SCRIPT_URL || "").trim();
   var demoMode = !isRealUrl(backendUrl);
 
+  var defaultSubject = String(config.SUBJECT || "");
+  var defaultBody = String(config.BODY_HTML || "");
+
   var els = {
     form: document.getElementById("send-form"),
     to: document.getElementById("to"),
     toError: document.getElementById("to-error"),
+    subject: document.getElementById("subject"),
+    subjectError: document.getElementById("subject-error"),
+    body: document.getElementById("body"),
+    bodyError: document.getElementById("body-error"),
+    reset: document.getElementById("reset"),
+    attachment: document.getElementById("attachment"),
     key: document.getElementById("key"),
     toggleKey: document.getElementById("toggle-key"),
     send: document.getElementById("send"),
     sendLabel: document.querySelector("#send .label"),
     status: document.getElementById("status"),
-    modeNote: document.getElementById("mode-note"),
-    subject: document.getElementById("preview-subject"),
-    attachment: document.getElementById("preview-attachment")
+    modeNote: document.getElementById("mode-note")
   };
 
   function isRealUrl(url) {
@@ -53,16 +60,38 @@
     els.sendLabel.textContent = isSending ? "Sending…" : "Send";
   }
 
+  function showFieldError(input, errorEl, message) {
+    input.setAttribute("aria-invalid", String(Boolean(message)));
+    errorEl.textContent = message;
+    errorEl.hidden = !message;
+  }
+
   function validateEmail() {
     var value = els.to.value.trim();
     var message = "";
     if (!value) message = "Enter a recipient email address.";
     else if (!EMAIL_RE.test(value)) message = "That doesn't look like a valid email address.";
-
-    els.to.setAttribute("aria-invalid", String(Boolean(message)));
-    els.toError.textContent = message;
-    els.toError.hidden = !message;
+    showFieldError(els.to, els.toError, message);
     return message ? null : value;
+  }
+
+  function validateSubject() {
+    var value = els.subject.value.trim();
+    showFieldError(els.subject, els.subjectError, value ? "" : "Enter a subject.");
+    return value || null;
+  }
+
+  function validateBody() {
+    var empty = !els.body.textContent.trim();
+    showFieldError(els.body, els.bodyError, empty ? "The message can't be empty." : "");
+    return empty ? null : els.body.innerHTML;
+  }
+
+  function resetToDefaults() {
+    els.subject.value = defaultSubject;
+    els.body.innerHTML = defaultBody;
+    showFieldError(els.subject, els.subjectError, "");
+    showFieldError(els.body, els.bodyError, "");
   }
 
   function postToBackend(payload) {
@@ -93,7 +122,11 @@
     event.preventDefault();
 
     var to = validateEmail();
+    var subject = validateSubject();
+    var html = validateBody();
     if (!to) { els.to.focus(); return; }
+    if (!subject) { els.subject.focus(); return; }
+    if (!html) { els.body.focus(); return; }
 
     var key = els.key.value.trim();
     saveKey(key);
@@ -112,7 +145,7 @@
     setSending(true);
     setStatus("sending", "Sending to " + to + "…");
 
-    postToBackend({ to: to, key: key })
+    postToBackend({ to: to, key: key, subject: subject, html: html })
       .then(function (data) {
         if (data && data.ok) {
           setStatus("success", "Sent to " + to + ". It's in your Gmail Sent folder.");
@@ -131,7 +164,7 @@
   }
 
   function init() {
-    els.subject.textContent = config.SUBJECT || "(subject not set)";
+    resetToDefaults();
     els.attachment.textContent = config.ATTACHMENT_NAME || "(attachment not set)";
     els.key.value = loadKey();
 
@@ -148,6 +181,16 @@
     els.to.addEventListener("input", function () {
       if (els.to.getAttribute("aria-invalid") === "true") validateEmail();
     });
+
+    els.subject.addEventListener("input", function () {
+      if (els.subject.getAttribute("aria-invalid") === "true") validateSubject();
+    });
+
+    els.body.addEventListener("input", function () {
+      if (els.body.getAttribute("aria-invalid") === "true") validateBody();
+    });
+
+    els.reset.addEventListener("click", resetToDefaults);
 
     els.key.addEventListener("change", function () { saveKey(els.key.value.trim()); });
 

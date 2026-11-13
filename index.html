@@ -14,26 +14,33 @@
       <p class="lede">Type an address, press Send. It goes out from your Gmail.</p>
     </header>
 
-    <section class="card preview" aria-labelledby="preview-title">
-      <h2 id="preview-title" class="eyebrow">What will be sent</h2>
-      <dl class="preview-list">
-        <div class="preview-row">
-          <dt>Subject</dt>
-          <dd id="preview-subject">—</dd>
-        </div>
-        <div class="preview-row">
-          <dt>Attachment</dt>
-          <dd id="preview-attachment" class="file">—</dd>
-        </div>
-      </dl>
-    </section>
-
     <form id="send-form" class="card form" novalidate>
       <div class="field">
-        <label for="to">Recipient email</label>
+        <label for="to">To</label>
         <input id="to" name="to" type="email" inputmode="email" autocomplete="email"
                placeholder="name@example.com" required aria-describedby="to-error">
         <p id="to-error" class="field-error" role="alert" hidden></p>
+      </div>
+
+      <div class="field">
+        <label for="subject">Subject</label>
+        <input id="subject" name="subject" type="text" required aria-describedby="subject-error">
+        <p id="subject-error" class="field-error" role="alert" hidden></p>
+      </div>
+
+      <div class="field">
+        <div class="label-row">
+          <span class="label" id="body-label">Message</span>
+          <button type="button" id="reset" class="link-btn">Reset to default</button>
+        </div>
+        <div id="body" class="body-editor" contenteditable="true" role="textbox"
+             aria-multiline="true" aria-labelledby="body-label" aria-describedby="body-error"></div>
+        <p id="body-error" class="field-error" role="alert" hidden></p>
+      </div>
+
+      <div class="attachment-row">
+        <span class="attachment-label">Attachment</span>
+        <span id="attachment" class="file">—</span>
       </div>
 
       <div class="field">

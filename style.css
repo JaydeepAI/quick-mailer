@@ -59,7 +59,7 @@ body {
 
 .shell {
   width: 100%;
-  max-width: 480px;
+  max-width: 640px;
   margin: 0 auto;
   padding: 32px 16px 48px;
   display: grid;
@@ -98,17 +98,63 @@ body {
   color: var(--muted);
 }
 
-.preview-list { margin: 0; display: grid; gap: 10px; }
-
-.preview-row {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 12px;
+.label-row {
+  display: flex;
   align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.preview-row dt { color: var(--muted); font-size: 0.875rem; }
-.preview-row dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.label-row .label { font-weight: 600; font-size: 0.9375rem; }
+
+.link-btn {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8125rem;
+}
+
+.link-btn:hover { text-decoration: underline; }
+
+/* The message editor stays light in both themes so it matches what the
+   recipient sees in their mail client. */
+.body-editor {
+  min-height: 240px;
+  max-height: 60vh;
+  overflow: auto;
+  padding: 14px 16px;
+  background: #ffffff;
+  color: #1f2328;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: 14px/1.6 Arial, Helvetica, sans-serif;
+  overflow-wrap: anywhere;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.body-editor:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+.body-editor[aria-invalid="true"] { border-color: var(--err-text); }
+
+.body-editor p { margin: 0 0 1em; }
+.body-editor p:last-child { margin-bottom: 0; }
+.body-editor a { color: #1a5fd0; }
+
+.attachment-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 0.9375rem;
+}
+
+.attachment-label { color: var(--muted); font-size: 0.875rem; }
+
+.file { font-weight: 500; overflow-wrap: anywhere; }
 
 .file::before {
   content: "📎 ";
