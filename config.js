@@ -3,5 +3,5 @@
 //
 // While APPS_SCRIPT_URL is the placeholder, the site runs in demo mode.
 window.QUICK_MAILER_CONFIG = {
-  APPS_SCRIPT_URL: "YOUR_APPS_SCRIPT_WEB_APP_URL"
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwbRN6xwURlOZuiNiB4h_wH2exyEXK5E-ZZ0pugGcubk756hWIK-pab_Ek8h9MGS9No/exec"
 };
