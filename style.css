@@ -120,8 +120,8 @@ body {
 /* The message editor stays light in both themes so it matches what the
    recipient sees in their mail client. */
 .body-editor {
-  min-height: 240px;
-  max-height: 60vh;
+  min-height: 200px;
+  max-height: 50vh;
   overflow: auto;
   padding: 14px 16px;
   background: #ffffff;
@@ -160,7 +160,38 @@ body {
   content: "📎 ";
 }
 
-.form { display: grid; gap: 18px; }
+.stack { display: grid; gap: 16px; }
+.stack-tight { display: grid; gap: 14px; }
+
+.eyebrow { margin: 0; }
+
+.body-editor[aria-disabled="true"],
+input:disabled { opacity: 0.6; }
+
+.key-panel { padding: 0; }
+
+.key-panel summary {
+  cursor: pointer;
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  list-style-position: inside;
+}
+
+.key-panel[open] summary { padding-bottom: 8px; }
+
+.key-panel .field { padding: 0 20px 20px; }
+
+.key-state { font-weight: 400; color: var(--muted); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 
 .field { display: grid; gap: 6px; }
 

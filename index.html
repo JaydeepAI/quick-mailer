@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+  <meta name="robots" content="noindex">
   <title>Quick Mailer</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -14,59 +17,70 @@
       <p class="lede">Type an address, press Send. It goes out from your Gmail.</p>
     </header>
 
-    <form id="send-form" class="card form" novalidate>
-      <div class="field">
-        <label for="to">To</label>
-        <input id="to" name="to" type="email" inputmode="email" autocomplete="email"
-               placeholder="name@example.com" required aria-describedby="to-error">
-        <p id="to-error" class="field-error" role="alert" hidden></p>
-      </div>
+    <form id="send-form" class="stack" novalidate>
+      <section class="card stack-tight" aria-label="Recipient">
+        <div class="field">
+          <label for="to">To</label>
+          <input id="to" name="to" type="email" inputmode="email" autocomplete="email"
+                 autocapitalize="off" spellcheck="false"
+                 placeholder="name@example.com" required aria-describedby="to-error">
+          <p id="to-error" class="field-error" role="alert" hidden></p>
+        </div>
 
-      <div class="field">
-        <label for="subject">Subject</label>
-        <input id="subject" name="subject" type="text" required aria-describedby="subject-error">
-        <p id="subject-error" class="field-error" role="alert" hidden></p>
-      </div>
+        <button id="send" type="submit" class="primary">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="label">Send</span>
+        </button>
 
-      <div class="field">
+        <div id="status" class="status" data-state="idle" role="status" aria-live="polite">
+          Loading…
+        </div>
+      </section>
+
+      <section class="card stack-tight" aria-labelledby="email-title">
         <div class="label-row">
+          <h2 id="email-title" class="eyebrow">Email</h2>
+          <button type="button" id="reset" class="link-btn" hidden>Reset to default</button>
+        </div>
+
+        <div class="field">
+          <label for="subject">Subject</label>
+          <input id="subject" name="subject" type="text" aria-describedby="subject-error" disabled>
+          <p id="subject-error" class="field-error" role="alert" hidden></p>
+        </div>
+
+        <div class="field">
           <span class="label" id="body-label">Message</span>
-          <button type="button" id="reset" class="link-btn">Reset to default</button>
+          <div id="body" class="body-editor" contenteditable="false" role="textbox"
+               aria-multiline="true" aria-labelledby="body-label" aria-describedby="body-error"
+               aria-disabled="true"></div>
+          <p id="body-error" class="field-error" role="alert" hidden></p>
         </div>
-        <div id="body" class="body-editor" contenteditable="true" role="textbox"
-             aria-multiline="true" aria-labelledby="body-label" aria-describedby="body-error"></div>
-        <p id="body-error" class="field-error" role="alert" hidden></p>
-      </div>
 
-      <div class="attachment-row">
-        <span class="attachment-label">Attachment</span>
-        <span id="attachment" class="file">—</span>
-      </div>
-
-      <div class="field">
-        <label for="key">Access key</label>
-        <div class="key-row">
-          <input id="key" name="key" type="password" autocomplete="current-password"
-                 placeholder="Saved in this browser only" spellcheck="false">
-          <button type="button" id="toggle-key" class="ghost" aria-pressed="false">Show</button>
+        <div class="attachment-row">
+          <span class="attachment-label">Attachment</span>
+          <span id="attachment" class="file">—</span>
         </div>
-        <p class="hint">Stored in this browser's localStorage and sent with each request.</p>
-      </div>
+      </section>
 
-      <button id="send" type="submit" class="primary">
-        <span class="spinner" aria-hidden="true"></span>
-        <span class="label">Send</span>
-      </button>
-
-      <div id="status" class="status" data-state="idle" role="status" aria-live="polite">
-        Ready.
-      </div>
+      <details id="key-panel" class="card key-panel">
+        <summary>Access key <span id="key-state" class="key-state"></span></summary>
+        <div class="field">
+          <label for="key" class="visually-hidden">Access key</label>
+          <div class="key-row">
+            <input id="key" name="key" type="password" autocomplete="current-password"
+                   autocapitalize="off" spellcheck="false" placeholder="Paste your access key">
+            <button type="button" id="toggle-key" class="ghost" aria-pressed="false">Show</button>
+            <button type="button" id="save-key" class="ghost">Save</button>
+          </div>
+          <p class="hint">Saved in this browser only, and sent with each request.</p>
+        </div>
+      </details>
     </form>
 
     <p id="mode-note" class="mode-note" hidden></p>
   </main>
 
-  <!-- config.js is gitignored; copy config.example.js to create it. -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

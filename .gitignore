@@ -1,11 +1,14 @@
-# Local config with your real Apps Script URL
-config.js
+# Personal defaults and one-time setup secrets for Apps Script
+apps-script/Personal.gs
+apps-script/Setup.gs
+
+# clasp project link and credentials
+.clasp.json
+.clasprc.json
 
 # Environment and secrets
 .env
 .env.*
-.clasp.json
-.clasprc.json
 
 # OS and editor files
 .DS_Store

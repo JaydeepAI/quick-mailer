@@ -1,25 +1,24 @@
 /**
  * Quick Mailer backend (Google Apps Script web app).
  *
- * Accepts POST requests whose body is a JSON string:
+ * Accepts POST requests whose body is a JSON string. Every request needs the
+ * access key.
+ *   {key, action: "defaults"}   returns the default subject and message and
+ *                               the name of the resume that will be attached.
  *   {key, to, subject?, html?}  sends the email from your Gmail with GmailApp
  *                               (so it appears in Sent), attaching the newest
- *                               resume from the GitHub "Latest Resume" folder.
- *   {key, action: "resume"}     returns the name of the resume that would be
- *                               attached, so the website can show it.
+ *                               resume from the private resume repo.
+ *
+ * Personal content (default subject and message) lives in Personal.gs, which
+ * is gitignored. See Personal.example.gs.
  *
  * Script Properties (Project Settings > Script Properties):
- *   ACCESS_KEY    required. The key the website sends with each request.
- *   GITHUB_TOKEN  required while the repo is private. A fine-grained token
- *                 with read-only "Contents" access to this repo only.
- *
- * Setup: see README.md.
+ *   ACCESS_KEY    The key the website sends with each request.
+ *   GITHUB_TOKEN  Fine-grained token with read-only Contents access to the
+ *                 resume repo.
  */
 
-var DEFAULT_SUBJECT = 'Your subject line here';
-var TEMPLATE_FILE = 'template'; // template.html, used when no html is sent
-
-var GITHUB_REPO = 'JaydeepAI/quick-mailer';
+var GITHUB_REPO = 'JaydeepAI/latest-resume';
 var GITHUB_BRANCH = 'main';
 var RESUME_FOLDER = 'Latest Resume';
 var RESUME_EXTENSIONS = /\.(pdf|docx?)$/i;
@@ -37,16 +36,14 @@ function doPost(e) {
       return json_({ ok: false, error: 'Invalid access key.' });
     }
 
-    if (body.action === 'resume') {
-      var resume = findLatestResume_();
-      return json_({ ok: true, resume: { name: resume.name, updated: resume.date.toISOString() } });
-    }
+    if (body.action === 'defaults') return json_(getDefaults_());
 
     var to = String(body.to || '').trim();
     if (!EMAIL_RE.test(to) || to.length > 254) {
       return json_({ ok: false, error: 'Invalid email address.' });
     }
 
+    var defaults = personal_();
     var subject = typeof body.subject === 'string' ? body.subject.trim() : '';
     if (subject.length > MAX_SUBJECT_LENGTH || /[\r\n]/.test(subject)) {
       return json_({ ok: false, error: 'Invalid subject.' });
@@ -57,15 +54,37 @@ function doPost(e) {
       return json_({ ok: false, error: 'Message is too long.' });
     }
 
-    var attached = sendMail_(to, subject || DEFAULT_SUBJECT, html.trim() ? html : null);
+    var attached = sendMail_(to, subject || defaults.SUBJECT, html.trim() ? html : defaults.BODY_HTML);
     return json_({ ok: true, attachment: attached });
   } catch (err) {
     console.error(err);
     return json_({
       ok: false,
-      error: err && err.userFacing ? err.message : 'Could not send the email. Check the Apps Script logs.'
+      error: err && err.userFacing ? err.message : 'Something went wrong. Check the Apps Script logs.'
     });
   }
+}
+
+function getDefaults_() {
+  var defaults = personal_();
+  var result = { ok: true, subject: defaults.SUBJECT, html: defaults.BODY_HTML };
+  try {
+    var resume = findLatestResume_();
+    result.resume = { name: resume.name, updated: resume.date.toISOString() };
+  } catch (err) {
+    console.error(err);
+    result.resumeError = err && err.userFacing ? err.message : 'Could not check the resume folder.';
+  }
+  return result;
+}
+
+// Personal.gs defines PERSONAL. Fall back to placeholders if it's missing.
+function personal_() {
+  var p = typeof PERSONAL === 'object' && PERSONAL ? PERSONAL : {};
+  return {
+    SUBJECT: p.SUBJECT || 'Your subject line here',
+    BODY_HTML: p.BODY_HTML || '<p>Hello,</p><p>Your message here.</p>'
+  };
 }
 
 function parseBody_(e) {
@@ -91,12 +110,11 @@ function isValidKey_(key) {
 
 /** Sends the email and returns the attached file's name. */
 function sendMail_(to, subject, html) {
-  var bodyHtml = html || HtmlService.createHtmlOutputFromFile(TEMPLATE_FILE).getContent();
   var resume = findLatestResume_();
   var attachment = downloadResume_(resume);
 
-  GmailApp.sendEmail(to, subject, htmlToText_(bodyHtml), {
-    htmlBody: wrapHtml_(bodyHtml),
+  GmailApp.sendEmail(to, subject, htmlToText_(html), {
+    htmlBody: wrapHtml_(html),
     attachments: [attachment]
   });
   return resume.name;
@@ -114,7 +132,7 @@ function findLatestResume_() {
     listing = JSON.parse(githubFetch_(folderUrl).getContentText());
   } catch (err) {
     if (err.status === 404) {
-      throw userError_('Could not find the "' + RESUME_FOLDER + '" folder on GitHub. Check GITHUB_REPO and GITHUB_TOKEN.');
+      throw userError_('Could not find the "' + RESUME_FOLDER + '" folder on GitHub. Check GITHUB_REPO and the token\'s repository access.');
     }
     throw err;
   }
@@ -196,7 +214,7 @@ function userError_(message) {
   return err;
 }
 
-// Give a bare HTML fragment from the website the same font as the editor.
+// Give a bare HTML fragment the same font as the website's editor.
 function wrapHtml_(html) {
   if (/<body[\s>]/i.test(html)) return html;
   return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#1f2328;">' +
@@ -234,7 +252,10 @@ function testLatestResume() {
   console.log('Latest resume: ' + resume.name + ' (committed ' + resume.date.toISOString() + ')');
 }
 
-/** Sends a test email with the latest resume to your own address. */
+/** Sends the default email with the latest resume to your own address. */
 function testSendToSelf() {
-  sendMail_(Session.getActiveUser().getEmail(), DEFAULT_SUBJECT, null);
+  var defaults = personal_();
+  var to = Session.getEffectiveUser().getEmail();
+  var attached = sendMail_(to, defaults.SUBJECT, defaults.BODY_HTML);
+  console.log('Sent to ' + to + ' with ' + attached);
 }
