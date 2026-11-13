@@ -10,8 +10,8 @@
   var backendUrl = String(config.APPS_SCRIPT_URL || "").trim();
   var demoMode = !isRealUrl(backendUrl);
 
-  // Subject and message come from the backend once the key is accepted, so
-  // nothing personal is stored in this public page.
+  // Subject and message come from the backend (Personal.gs) once the key is
+  // accepted.
   var defaults = null;
 
   var els = {
