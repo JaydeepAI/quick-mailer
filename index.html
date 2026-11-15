@@ -21,10 +21,18 @@
       <section class="card stack-tight" aria-label="Recipient">
         <div class="field">
           <label for="to">To</label>
-          <input id="to" name="to" type="email" inputmode="email" autocomplete="email"
+          <input id="to" name="to" type="text" inputmode="email" autocomplete="email"
                  autocapitalize="off" spellcheck="false"
                  placeholder="name@example.com" required aria-describedby="to-error" autofocus>
           <p id="to-error" class="field-error" role="alert" hidden></p>
+        </div>
+
+        <div id="countdown" class="countdown" hidden>
+          <div class="countdown-row">
+            <span id="countdown-text"></span>
+            <button type="button" id="cancel-auto" class="link-btn">Cancel (Esc)</button>
+          </div>
+          <div class="countdown-track"><div id="countdown-bar" class="countdown-bar"></div></div>
         </div>
 
         <button id="send" type="submit" class="primary">

@@ -32,8 +32,70 @@
     key: document.getElementById("key"),
     toggleKey: document.getElementById("toggle-key"),
     saveKey: document.getElementById("save-key"),
-    modeNote: document.getElementById("mode-note")
+    modeNote: document.getElementById("mode-note"),
+    countdown: document.getElementById("countdown"),
+    countdownText: document.getElementById("countdown-text"),
+    countdownBar: document.getElementById("countdown-bar"),
+    cancelAuto: document.getElementById("cancel-auto")
   };
+
+  // ---- auto-send countdown ----
+  // A valid address in "To" sends itself after AUTO_SEND_SECONDS. Any edit
+  // restarts the count; Esc, Cancel, or moving to another field stops it.
+
+  var AUTO_SEND_SECONDS = 5;
+  var countdownTimer = null;
+  var isSending = false;
+  var sendAfterCurrent = false;
+
+  function cancelCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    countdownTimer = null;
+    els.countdown.hidden = true;
+  }
+
+  function startCountdown(address) {
+    cancelCountdown();
+    var remaining = AUTO_SEND_SECONDS;
+    var render = function () {
+      els.countdownText.textContent = "Sending to " + address + " in " + remaining + "…";
+    };
+
+    // Restart the progress bar animation from full.
+    els.countdownBar.classList.remove("paused");
+    els.countdownBar.style.animation = "none";
+    void els.countdownBar.offsetWidth;
+    els.countdownBar.style.animation = "";
+
+    render();
+    els.countdown.hidden = false;
+
+    countdownTimer = setInterval(function () {
+      remaining -= 1;
+      if (remaining > 0) { render(); return; }
+      cancelCountdown();
+      if (isSending) {
+        // Previous email is still going out; send this one right after.
+        sendAfterCurrent = true;
+        els.countdownText.textContent = "Waiting for the previous email to finish…";
+        els.countdownBar.classList.add("paused");
+        els.countdown.hidden = false;
+      } else {
+        send();
+      }
+    }, 1000);
+  }
+
+  function onRecipientInput() {
+    var raw = els.to.value;
+    var trimmed = raw.trim();
+    if (raw !== trimmed) els.to.value = trimmed;
+    if (els.to.getAttribute("aria-invalid") === "true") validateEmail();
+
+    sendAfterCurrent = false;
+    if (EMAIL_RE.test(trimmed)) startCountdown(trimmed);
+    else cancelCountdown();
+  }
 
   function isRealUrl(url) {
     if (!url || url.indexOf(PLACEHOLDER_URL) !== -1) return false;
@@ -209,7 +271,12 @@
 
   function handleSubmit(event) {
     event.preventDefault();
+    cancelCountdown();
+    if (isSending) { sendAfterCurrent = true; return; }
+    send();
+  }
 
+  function send() {
     var to = validateEmail();
     if (!to) { els.to.focus(); return; }
 
@@ -238,6 +305,7 @@
       return;
     }
 
+    isSending = true;
     setSending(true);
     setStatus("sending", "Sending to " + to + "…");
 
@@ -246,15 +314,22 @@
         if (data && data.ok) {
           var withFile = data.attachment ? " with " + data.attachment : "";
           setStatus("success", "Sent to " + to + withFile + ".");
-          els.to.value = "";
+          // Don't wipe a new address pasted while this one was sending.
+          if (els.to.value.trim() === to) els.to.value = "";
         } else {
           setStatus("error", (data && data.error) || "The server couldn't send the email.");
         }
       })
       .catch(function (err) { setStatus("error", err.message); })
       .finally(function () {
+        isSending = false;
         setSending(false);
         els.to.focus();
+        if (sendAfterCurrent) {
+          sendAfterCurrent = false;
+          cancelCountdown();
+          send();
+        }
       });
   }
 
@@ -277,8 +352,21 @@
       if (document.visibilityState === "visible") focusRecipient();
     });
     focusRecipient();
-    els.to.addEventListener("input", function () {
-      if (els.to.getAttribute("aria-invalid") === "true") validateEmail();
+    els.to.addEventListener("input", onRecipientInput);
+    els.to.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { sendAfterCurrent = false; cancelCountdown(); }
+    });
+    els.cancelAuto.addEventListener("click", function () {
+      sendAfterCurrent = false;
+      cancelCountdown();
+      els.to.focus();
+    });
+    // Editing the email before it goes out stops the auto-send.
+    [els.subject, els.body, els.key].forEach(function (el) {
+      el.addEventListener("focus", function () {
+        sendAfterCurrent = false;
+        cancelCountdown();
+      });
     });
     els.subject.addEventListener("input", function () {
       if (els.subject.getAttribute("aria-invalid") === "true") validateSubject();

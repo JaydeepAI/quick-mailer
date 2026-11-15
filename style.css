@@ -292,6 +292,46 @@ button:focus-visible {
 .status[data-state="error"]   { background: var(--err-bg); color: var(--err-text); }
 .status[data-state="demo"]    { background: var(--warn-bg); color: var(--warn-text); }
 
+.countdown {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+.countdown[hidden] { display: none; }
+
+.countdown-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.countdown-row span { overflow-wrap: anywhere; }
+.countdown-row .link-btn { flex: none; }
+
+.countdown-track {
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.countdown-bar {
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: drain 5s linear forwards;
+}
+
+.countdown-bar.paused { animation: none; transform: scaleX(0); }
+
+@keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
 .mode-note {
   margin: 0;
   text-align: center;
