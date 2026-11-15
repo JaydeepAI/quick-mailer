@@ -83,6 +83,15 @@
     errorEl.hidden = !message;
   }
 
+  // Put the cursor in "To" so you can paste + Enter without clicking. Leaves
+  // focus alone if you were editing the subject, message or access key.
+  function focusRecipient() {
+    var active = document.activeElement;
+    if (active === els.subject || active === els.body || active === els.key) return;
+    if (active === els.to) return;
+    try { els.to.focus({ preventScroll: true }); } catch (e) { els.to.focus(); }
+  }
+
   function formatDate(iso) {
     var d = new Date(iso);
     if (isNaN(d.getTime())) return "";
@@ -243,7 +252,10 @@
         }
       })
       .catch(function (err) { setStatus("error", err.message); })
-      .finally(function () { setSending(false); });
+      .finally(function () {
+        setSending(false);
+        els.to.focus();
+      });
   }
 
   function saveKeyAndReload() {
@@ -258,6 +270,13 @@
     els.key.value = loadKey();
 
     els.form.addEventListener("submit", handleSubmit);
+
+    // Refocus "To" whenever you come back to this tab/window.
+    window.addEventListener("focus", focusRecipient);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") focusRecipient();
+    });
+    focusRecipient();
     els.to.addEventListener("input", function () {
       if (els.to.getAttribute("aria-invalid") === "true") validateEmail();
     });
